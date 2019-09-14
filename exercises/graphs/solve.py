@@ -1,3 +1,4 @@
+# Graphic creator
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
@@ -10,6 +11,7 @@ class Graph:
         self.mid = int((self.x + self.y) / 2)
         self.scale = int(self.mid / 200)
         self.problem = problem.replace(' ', '')
+        self.points = []
 
         self.draw = ImageDraw.Draw(self.image)
         self.font = ImageFont.truetype('calibri.ttf', 10+int(1.5*self.scale))
@@ -22,8 +24,7 @@ class Graph:
     def _draw_line(self, xy, color='black'):
         self.draw.line(xy, fill=color)
 
-    def points(self):
-        points = []
+    def get_points(self):
         for x in range(-self.mid, self.mid+1, 1):
             try:
                 y = -eval(self.problem.replace('x', f"({x})"))
@@ -37,17 +38,15 @@ class Graph:
             # of the image
             x, y = x * self.scale, y * self.scale
             if not (abs(x) >= self.x or abs(y) >= self.y):
-                points.append((int(self.x / 2 + x), int(self.y / 2 + y)))
+                self.points.append((int(self.x / 2 + x), int(self.y / 2 + y)))
 
-        return points
-
-    def blank(self, points):
+    def blank(self):
         # Draw x,y lines
         self._draw_line((0, self.y / 2, self.x, self.y / 2))
         self._draw_line((self.x / 2, 0, self.x / 2, self.y))
 
         # Draw tiny lines
-        for x, y in points:
+        for x, y in self.points:
             self._draw_line((x, self.y / 2 - self.scale / 2, x, self.y / 2 + self.scale / 1.5))
             self._draw_line((self.x / 2 - self.scale / 2, y, self.x / 2 + self.scale / 1.5, y))
 
@@ -61,17 +60,17 @@ class Graph:
         # Draw problem
         self._draw_text((10, 10), f"y={self.problem}")
 
-    def draw_points(self, points):
-        ox, oy = points[0]
-        for x, y in points[1:]:
+    def draw_points(self):
+        ox, oy = self.points[0]
+        for x, y in self.points[1:]:
             if not abs((x + y) - (ox + oy)) > 100 * self.scale:
                 self._draw_line((ox, oy, x, y), 'blue')
             ox, oy = x, y
 
     def create(self):
-        points = self.points()
-        self.blank(points)
-        self.draw_points(points)
+        self.get_points()
+        self.blank()
+        self.draw_points()
 
     def save(self, name):
         self.image.save(name, 'PNG')
@@ -85,8 +84,5 @@ class Graph:
     def __getattr__(self, item):
         if item == 'bytes':
             bytes_img = BytesIO()
-            self.image.save(bytes_img, format='PNG')
+            self.save(bytes_img)
             return bytes_img.getvalue()
-
-        elif item == 'points':
-            return self.points()
