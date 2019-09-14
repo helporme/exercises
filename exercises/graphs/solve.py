@@ -1,4 +1,3 @@
-# Graphic creator
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
