@@ -77,11 +77,12 @@ class Graph:
     def show(self):
         self.image.show()
 
-    def __str__(self):
-        return f"<Graph object: problem({self.problem})>"
-
     def __getattr__(self, item):
         if item == 'bytes':
             bytes_img = BytesIO()
             self.save(bytes_img)
             return bytes_img.getvalue()
+
+    def __str__(self):
+        return f"<Graph object: problem({self.problem})>"
+
