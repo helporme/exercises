@@ -63,7 +63,7 @@ class Graph:
 
     def draw_points(self, points):
         ox, oy = points[0]
-        for n, (x, y) in enumerate(points[1:]):
+        for x, y in points[1:]:
             if not abs((x + y) - (ox + oy)) > 100 * self.scale:
                 self._draw_line((ox, oy, x, y), 'blue')
             ox, oy = x, y
