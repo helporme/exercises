@@ -1,15 +1,15 @@
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
-
 class Graph:
-    def __init__(self, problem, size=(1000, 1000)):
+    def __init__(self, problem, *methods, size=(1000, 1000)):
+        self.methods = self.__import_methods(methods)
         self.image = Image.new('RGB', size, 'white')
 
         self.x, self.y = self.image.size
         self.mid = int((self.x + self.y) / 2)
         self.scale = int(self.mid / 200)
-        self.problem = problem.replace(' ', '')
+        self.problem = problem
         self.points = []
 
         self.draw = ImageDraw.Draw(self.image)
@@ -17,16 +17,20 @@ class Graph:
 
         self.create()
 
-    def _draw_text(self, xy, text):
-        self.draw.text(xy, text, font=self.font, fill=(255, 0, 0, 255))
+    def _draw_text(self, xy, text, color='red'):
+        self.draw.text(xy, text, font=self.font, fill=color)
 
     def _draw_line(self, xy, color='black'):
         self.draw.line(xy, fill=color)
 
     def get_points(self):
         for x in range(-self.mid, self.mid+1, 1):
+            task = self.problem.replace('x', f"({x})")
+            for name, method in self.methods.items():
+                task = task.replace(name, f"self.methods['{name}']")
+
             try:
-                y = -eval(self.problem.replace('x', f"({x})"))
+                y = -eval(task)
             except ZeroDivisionError:
                 continue
 
@@ -39,15 +43,16 @@ class Graph:
             if not (abs(x) >= self.x or abs(y) >= self.y):
                 self.points.append((int(self.x / 2 + x), int(self.y / 2 + y)))
 
+    def marks(self):
+        # Draw marks
+        for x, y in self.points:
+            self._draw_line((x, self.y / 2 - self.scale / 2, x, self.y / 2 + self.scale / 1.5))
+            self._draw_line((self.x / 2 - self.scale / 2, y, self.x / 2 + self.scale / 1.5, y))
+
     def blank(self):
         # Draw x,y lines
         self._draw_line((0, self.y / 2, self.x, self.y / 2))
         self._draw_line((self.x / 2, 0, self.x / 2, self.y))
-
-        # Draw tiny lines
-        for x, y in self.points:
-            self._draw_line((x, self.y / 2 - self.scale / 2, x, self.y / 2 + self.scale / 1.5))
-            self._draw_line((self.x / 2 - self.scale / 2, y, self.x / 2 + self.scale / 1.5, y))
 
         # Draw x, y symbols
         self._draw_text((self.x - 3 * self.scale, self.y / 2 + self.scale), 'x')
@@ -67,8 +72,8 @@ class Graph:
             ox, oy = x, y
 
     def create(self):
-        self.get_points()
         self.blank()
+        self.get_points()
         self.draw_points()
 
     def save(self, name):
@@ -76,6 +81,12 @@ class Graph:
 
     def show(self):
         self.image.show()
+
+    @staticmethod
+    def __import_methods(methods):
+        module = __import__('numpy', fromlist=list(methods))
+        methods = [getattr(module, method) for method in methods]
+        return {getattr(method, '__name__'): method for method in methods}
 
     def __getattr__(self, item):
         if item == 'bytes':
@@ -85,4 +96,3 @@ class Graph:
 
     def __str__(self):
         return f"<Graph object: problem({self.problem})>"
-
