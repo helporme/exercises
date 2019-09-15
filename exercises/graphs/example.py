@@ -2,7 +2,7 @@ from solve import Graph
 
 
 def main():
-    gr = Graph('100/x')
+    gr = Graph('cos(x)', 'cos')
     gr.show()
     ...
 
