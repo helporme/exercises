@@ -1,4 +1,4 @@
-from solve import Graph
+from Graph import Graph
 
 
 def main():
